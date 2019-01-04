@@ -1,9 +1,8 @@
 /**
  * Switches aws temp profiles
  */
-const Promise = require('bluebird')
 const colors = require('colors')
-const {STS} = require('aws-sdk')
+const { STS } = require('aws-sdk')
 const fs = require('fs')
 const ini = require('ini')
 
@@ -90,19 +89,19 @@ const parser = require('argly').createParser({
       throw new Error(`Source profile "${sourceProfile}" does not exist in your credentials.`)
     }
 
-    const sts = Promise.promisifyAll(new STS({
+    const sts = new STS({
       accessKeyId: sourceProfileCredentials['aws_access_key_id'],
       secretAccessKey: sourceProfileCredentials['aws_secret_access_key'],
       apiVersion: '2011-06-15'
-    }))
+    })
 
     console.log(colors.cyan('Retrieving aws session token...'))
 
-    let response = await sts.getSessionTokenAsync({
+    const response = await sts.getSessionToken({
       DurationSeconds: 129600,
       SerialNumber: arn,
       TokenCode: tokenCode
-    })
+    }).promise()
 
     credentials[targetProfile] = {
       aws_access_key_id: response.Credentials.AccessKeyId,
@@ -115,7 +114,7 @@ const parser = require('argly').createParser({
 
     console.log(colors.green('Complete!'))
   } catch (err) {
-    console.error(colors.red(err.toString()))
+    console.error(err);
     process.exit(1)
   }
 })()
